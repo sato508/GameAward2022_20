@@ -8,6 +8,24 @@ using Cinemachine;
 public class Player : MonoBehaviour
 {
     // 外部パラメーター
+    [Header("Hp")]
+    [SerializeField] AttackCollision attackCollision;
+    [SerializeField] private int hp;
+    public int Hp
+    {
+        set //値をhpに代入する
+        {
+            this.hp = value;
+            if (this.hp < 0)
+            {
+                this.hp = 0;
+            }
+        }
+        get //値を返す
+        {
+            return this.hp;
+        }
+    }
     [Header("Movement")]
     [SerializeField] private float      MovingSpeedAttenuate    = 0.0f; // 移動速度の減衰値
     [SerializeField] private float      MovingSpeedAccel        = 0.0f; // 移動速度の加速値
@@ -113,10 +131,19 @@ public class Player : MonoBehaviour
         }
         if (input.Attack == true && AttackCooldown == 0.0f)
         {
-            Ripple.Step();
             Trail.emitting = true;
 
             AttackCooldown = AttackCooltime;
+
+            if(attackCollision.frag)
+            {
+                Enemy enemy = attackCollision.hitGO.GetComponent<Enemy>();
+                if(enemy)
+                {
+                    enemy.Hp -= 1;
+                    Debug.Log("hit");
+                }
+            }
         }
     }
 
