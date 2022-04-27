@@ -8,6 +8,24 @@ using Cinemachine;
 public class Player : MonoBehaviour
 {
     // 外部パラメーター
+    [Header("Hp")]
+    [SerializeField] AttackCollision attackCollision;
+    [SerializeField] private int hp;
+    public int Hp
+    {
+        set //値をhpに代入する
+        {
+            this.hp = value;
+            if (this.hp < 0)
+            {
+                this.hp = 0;
+            }
+        }
+        get //値を返す
+        {
+            return this.hp;
+        }
+    }
     [Header("Movement")]
     [SerializeField] private float      MovingSpeedAttenuate    = 0.0f; // 移動速度の減衰値
     [SerializeField] private float      MovingSpeedAccel        = 0.0f; // 移動速度の加速値
@@ -29,7 +47,7 @@ public class Player : MonoBehaviour
     [SerializeField] private float      AttackMotionAngle   = 0.0f; // 
     [SerializeField] private float      AttackMotionDamage  = 0.0f; // 
     [Header("Effect")]
-    [SerializeField] private Ripple         Ripple  = null; // 波
+    [SerializeField] private RippleManager  Ripple  = null; // 波
     [SerializeField] private TrailRenderer  Trail   = null; // 軌跡
 
     // 内部パラメーター
@@ -47,6 +65,7 @@ public class Player : MonoBehaviour
     private GameInput       input;
     private Rigidbody       rb;
     private CapsuleCollider collision;
+    private AudioSource audio;
 
     private void Awake()
     {
@@ -54,6 +73,9 @@ public class Player : MonoBehaviour
         TryGetComponent<GameInput>(out input);
         TryGetComponent<Rigidbody>(out rb);
         TryGetComponent<CapsuleCollider>(out collision);
+        TryGetComponent<AudioSource>(out audio);
+
+        audio.mute = true;
     }
 
     private void Start()
@@ -107,16 +129,38 @@ public class Player : MonoBehaviour
 
             if (AttackCooldown < 0.0f)
             {
-                Trail.emitting = false;
+                //Trail.emitting = false;
                 AttackCooldown = 0.0f;
             }
         }
         if (input.Attack == true && AttackCooldown == 0.0f)
         {
-            Ripple.Step();
-            Trail.emitting = true;
+            //Trail.emitting = true;
+
+            Ripple.StartRipple();
 
             AttackCooldown = AttackCooltime;
+
+            if(attackCollision.frag)
+            {
+                Enemy enemy = attackCollision.hitGO.GetComponent<Enemy>();
+                if(enemy)
+                {
+                    enemy.Hp -= 1;
+                    Debug.Log("hit");
+                }
+            }
+        }
+
+        //足音
+        if (IsGround && HorizontalVelocity.sqrMagnitude > 0.9f)
+        {
+            audio.mute = false;
+        }
+        else
+        {
+            audio.mute = true;
+            audio.time = 0.0f;
         }
     }
 
