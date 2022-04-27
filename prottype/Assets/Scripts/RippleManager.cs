@@ -28,17 +28,18 @@ public class RippleManager : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (CoolTimeCount >= CoolTimeMax && UnityEngine.InputSystem.Keyboard.current.pKey.isPressed)
-        {
-            StartRipple();
-            CoolTimeCount = 0;
-        }
+        //if (CoolTimeCount >= CoolTimeMax && UnityEngine.InputSystem.Keyboard.current.pKey.isPressed)
+        //{
+        //    StartRipple();
+        //    CoolTimeCount = 0;
+        //}
 
         CoolTimeCount++;
     }
 
-    void StartRipple()
+    public void StartRipple()
     {
+        CoolTimeCount = 0;
         Instantiate(RipplePrefub, this.transform);
     }
     

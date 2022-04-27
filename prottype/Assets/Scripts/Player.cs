@@ -47,7 +47,7 @@ public class Player : MonoBehaviour
     [SerializeField] private float      AttackMotionAngle   = 0.0f; // 
     [SerializeField] private float      AttackMotionDamage  = 0.0f; // 
     [Header("Effect")]
-    [SerializeField] private Ripple         Ripple  = null; // îg
+    [SerializeField] private RippleManager  Ripple  = null; // îg
     [SerializeField] private TrailRenderer  Trail   = null; // ãOê’
 
     // ì‡ïîÉpÉâÉÅÅ[É^Å[
@@ -65,6 +65,7 @@ public class Player : MonoBehaviour
     private GameInput       input;
     private Rigidbody       rb;
     private CapsuleCollider collision;
+    private AudioSource audio;
 
     private void Awake()
     {
@@ -72,6 +73,9 @@ public class Player : MonoBehaviour
         TryGetComponent<GameInput>(out input);
         TryGetComponent<Rigidbody>(out rb);
         TryGetComponent<CapsuleCollider>(out collision);
+        TryGetComponent<AudioSource>(out audio);
+
+        audio.mute = true;
     }
 
     private void Start()
@@ -125,13 +129,15 @@ public class Player : MonoBehaviour
 
             if (AttackCooldown < 0.0f)
             {
-                Trail.emitting = false;
+                //Trail.emitting = false;
                 AttackCooldown = 0.0f;
             }
         }
         if (input.Attack == true && AttackCooldown == 0.0f)
         {
-            Trail.emitting = true;
+            //Trail.emitting = true;
+
+            Ripple.StartRipple();
 
             AttackCooldown = AttackCooltime;
 
@@ -144,6 +150,17 @@ public class Player : MonoBehaviour
                     Debug.Log("hit");
                 }
             }
+        }
+
+        //ë´âπ
+        if (IsGround && HorizontalVelocity.sqrMagnitude > 0.1f)
+        {
+            audio.mute = false;
+        }
+        else
+        {
+            audio.mute = true;
+            audio.time = 0.0f;
         }
     }
 
