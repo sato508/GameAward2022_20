@@ -153,7 +153,7 @@ public class Player : MonoBehaviour
         }
 
         //‘«‰¹
-        if (IsGround && HorizontalVelocity.sqrMagnitude > 0.1f)
+        if (IsGround && HorizontalVelocity.sqrMagnitude > 0.9f)
         {
             audio.mute = false;
         }
