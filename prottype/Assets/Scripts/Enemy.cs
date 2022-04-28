@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class Enemy : MonoBehaviour
 {
-    enum Mode
+    public enum Mode
     {
         Move,
         Stay,
@@ -39,7 +39,7 @@ public class Enemy : MonoBehaviour
     private float oldDistance;
 
     [Header("Mode(途中で変更不可)")]
-    [SerializeField] private Mode mode;
+    public Mode mode = Mode.Move;
 
     [Header("必要な情報")]
     [SerializeField] private RippleManager Ripple;
