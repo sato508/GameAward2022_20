@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class Ripple : MonoBehaviour
 {
-    //[SerializeField] protected Shader shader;
-
     private Material material;
     private MeshRenderer meshRenderer;
 
