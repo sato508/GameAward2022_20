@@ -13,7 +13,10 @@ public class GameInput : MonoBehaviour
 
     public Vector2  Move { get { return m_move; } }
     public Vector2  Look { get { return m_look; } }
-    public bool     Attack { get { return m_attack; } }
+    public bool     Attack { 
+        get { return m_attack; }
+        set { m_attack = value; }
+    }
     public bool     Jump { get { return m_jump; } }
 
     private void OnMove(InputValue value)

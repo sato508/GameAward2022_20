@@ -1,7 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(GameInput))]
@@ -15,11 +17,7 @@ public class Player : MonoBehaviour
     {
         set //値をhpに代入する
         {
-            this.hp = value;
-            if (this.hp < 0)
-            {
-                this.hp = 0;
-            }
+            this.hp = Math.Max(this.hp - value, 0);
         }
         get //値を返す
         {
@@ -50,6 +48,10 @@ public class Player : MonoBehaviour
     [SerializeField] private RippleManager  Ripple  = null; // 波
     [SerializeField] private TrailRenderer  Trail   = null; // 軌跡
 
+    [Header("当たった時に表示するやつ")]
+    [SerializeField] protected Text HitText;
+    [SerializeField] protected string WriteText;
+
     // 内部パラメーター
     private Vector3     MovingDirection     = new Vector3(0, 0, 0); // 移動方向
     private Vector3     HorizontalVelocity  = new Vector3(0, 0, 0); // 横方向の移動速度 (x, 0, z)
@@ -76,6 +78,7 @@ public class Player : MonoBehaviour
         TryGetComponent<AudioSource>(out audio);
 
         audio.mute = true;
+        HitText.text = "";
     }
 
     private void Start()
@@ -137,7 +140,8 @@ public class Player : MonoBehaviour
         {
             //Trail.emitting = true;
 
-            Ripple.StartRipple();
+            //if (Ripple != null)
+            //    Ripple.StartRipple();
 
             AttackCooldown = AttackCooltime;
 
@@ -149,6 +153,10 @@ public class Player : MonoBehaviour
                     enemy.Hp -= 1;
                     Debug.Log("hit");
                 }
+            }
+            else
+            {
+                
             }
         }
 
@@ -162,6 +170,9 @@ public class Player : MonoBehaviour
             audio.mute = true;
             audio.time = 0.0f;
         }
+
+        if (hp <= 0)
+            HitText.text = WriteText;
     }
 
     private void LateUpdate()
