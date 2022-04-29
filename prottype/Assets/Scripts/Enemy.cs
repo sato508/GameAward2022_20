@@ -48,6 +48,9 @@ public class Enemy : MonoBehaviour
     [SerializeField] protected Text HitText;
     [SerializeField] protected string WriteText;
 
+    [Header("何か")]
+    [SerializeField] protected MeshRenderer mesh;
+
     private AudioSource audio;
 
     void Start()
@@ -83,7 +86,7 @@ public class Enemy : MonoBehaviour
 
     private void UpdateAttack()
     {
-        if(hitBox.frag && attackFrag)
+        if(attackFrag)
         {
             if(hitBox.hitGO && hitBox.hitGO.tag == "Player")
             {
@@ -98,6 +101,8 @@ public class Enemy : MonoBehaviour
             Ripple.StartRipple();
 
             attackFrag = false;
+
+            StartCoroutine(AttackLooking());
         }
     }
 
@@ -120,6 +125,15 @@ public class Enemy : MonoBehaviour
             attackFrag = !attackFrag;
             Debug.Log("attack");
         }
+    }
+
+    private IEnumerator AttackLooking()
+    {
+        mesh.enabled = true;
+
+        yield return new WaitForSeconds(1);
+
+        mesh.enabled = false;
     }
 }
 

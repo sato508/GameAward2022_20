@@ -94,7 +94,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7584797616433273438}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -255,10 +255,11 @@ MonoBehaviour:
   hitBox: {fileID: 7584797616586320154}
   distance: 3
   time: 2
-  mode: 0
+  mode: 1
   Ripple: {fileID: 8623909786704146291}
   HitText: {fileID: 0}
   WriteText: "\u6575\u306B\u5F53\u305F\u3063\u305F"
+  mesh: {fileID: 7584797616433273435}
 --- !u!136 &3229797723145771053
 CapsuleCollider:
   m_ObjectHideFlags: 0
