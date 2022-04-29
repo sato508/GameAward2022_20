@@ -14,9 +14,9 @@ public class AttackCollision : MonoBehaviour
         frag = false;
     }
 
-    void OnTriggerEnter(Collider other)
+    void OnTriggerStay(Collider other)
     {
-        if(transform.parent.gameObject != other.gameObject)
+        if(transform.parent.gameObject != other.gameObject && other.gameObject.CompareTag("Player"))
         {
             frag = true;
             hitGO = other.gameObject;

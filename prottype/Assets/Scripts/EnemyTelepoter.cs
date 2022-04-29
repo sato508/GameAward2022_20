@@ -14,7 +14,7 @@ public class EnemyTelepoter : MonoBehaviour
         int random = Random.Range(0, TeleportPosition.Length - 1);
         Transform enemytransform = Enemy.transform;
         enemytransform.position =
-            new Vector3(TeleportPosition[random].position.x, 5.0f, TeleportPosition[random].position.z);
+            new Vector3(TeleportPosition[random].position.x, 6.0f, TeleportPosition[random].position.z);
     }
 
     // Update is called once per frame
