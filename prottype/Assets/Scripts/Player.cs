@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -89,6 +90,13 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
+        if(UnityEngine.InputSystem.Keyboard.current.escapeKey.IsPressed())
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+
         // ’…’n”»’è
         Ray ray = new Ray(Foot.position, Vector3.down);
         

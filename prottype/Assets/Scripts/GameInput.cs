@@ -19,20 +19,20 @@ public class GameInput : MonoBehaviour
     }
     public bool     Jump { get { return m_jump; } }
 
-    private void OnMove(InputValue value)
+    private void OnMove(InputAction.CallbackContext context)
     {
-        m_move = value.Get<Vector2>();
+        m_move = context.ReadValue<Vector2>();
     }
-    private void OnLook(InputValue value)
+    private void OnLook(InputAction.CallbackContext context)
     {
-        m_look = value.Get<Vector2>();
+        m_look = context.ReadValue<Vector2>();
     }
-    private void OnAttack(InputValue value)
+    private void OnAttack(InputAction.CallbackContext context)
     {
-        m_attack = value.Get<float>() >= InputSystem.settings.defaultButtonPressPoint;
+        m_attack = context.ReadValue<float>() >= InputSystem.settings.defaultButtonPressPoint;
     }
-    private void OnJump(InputValue value)
+    private void OnJump(InputAction.CallbackContext context)
     {
-        m_jump = value.Get<float>() >= InputSystem.settings.defaultButtonPressPoint;
+        m_jump = context.ReadValue<float>() >= InputSystem.settings.defaultButtonPressPoint;
     }
 }
