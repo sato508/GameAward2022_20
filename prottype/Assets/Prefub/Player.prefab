@@ -522,7 +522,7 @@ MonoBehaviour:
       m_LegacyHeadingDefinition: 0
       m_LegacyVelocityFilterStrength: 0
   Hand: {fileID: 7958081493765844886}
-  AttackCooltime: 1
+  AttackCooltime: 0.3
   AttackMotionTime: 0
   AttackMotionAngle: 0
   AttackMotionDamage: 0
@@ -570,13 +570,13 @@ AudioSource:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.20062256
+      time: 1
       value: 0
-      inSlope: -1.002004
-      outSlope: -1.002004
+      inSlope: -0.3379641
+      outSlope: -0.3379641
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0
+      inWeight: 0.22537483
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
