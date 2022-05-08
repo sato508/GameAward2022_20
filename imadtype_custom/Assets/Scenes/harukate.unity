@@ -2780,7 +2780,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 416f2c0d9c2dc2448935b741b758de7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  matchManager: {fileID: 0}
+  matchManager: {fileID: 1744779525}
   PlayerPrefub:
   - {fileID: 3556315587164920818, guid: 5f66228f6c139bc4abf720dae3601493, type: 3}
   - {fileID: 5280666981176402227, guid: 4f3839f7f4e77c949aa787520965a0c7, type: 3}

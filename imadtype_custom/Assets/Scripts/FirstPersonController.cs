@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using DG.Tweening;
 using UnityEngine;
@@ -53,8 +54,10 @@ namespace StarterAssets
 		[Tooltip("How far in degrees can you move the camera down")]
 		public float BottomClamp = -90.0f;
 
-		[Header("Player")]
-		public MatchManager matchManager;
+        [Header("Player")] 
+        public int PlayerIndex = -1;
+        public CreatePlayerManagement PlayerManagement;
+        public Gamepad gamepad = null;
 		public Transform SwordGrip;
 		public Transform SwordRotator;
 		public Collider SwordCollider;
@@ -64,7 +67,22 @@ namespace StarterAssets
 		public GameObject PrefabAttack;
 		public GameObject PrefabDeath;
 
-		// cinemachine
+        
+
+        [Header("ゲームパッドのバイブレーション設定")]
+		[Tooltip("敵が近づいたとき")]
+		public bool NearEnemy = true;
+        [Tooltip("敵に近いとき敵が歩いていたら敵の足音が聞こえる")] 
+        public bool EnemyFootstep = false;
+        [Tooltip("振動検知の距離設定をAudioSoruceの設定に合わせる")] 
+        public bool VibrationAudioDependency = true;
+
+        [Tooltip("振動が始まる距離")]
+        public float MinDistance = 0.0f;
+        [Tooltip("振動が始まる距離")]
+        public float MaxDistance = 15.0f;
+
+        // cinemachine
 		private float _cinemachineTargetPitch;
 
 		// player
@@ -82,6 +100,11 @@ namespace StarterAssets
 		private CharacterController _controller;
 		private StarterAssetsInputs _input;
 		private GameObject _mainCamera;
+        private MatchManager matchManager;
+
+		//敵情報
+        private Transform enemy;
+        private CharacterController enemyCharacterController;
 
 		private const float _threshold = 0.01f;
 		
@@ -102,10 +125,30 @@ namespace StarterAssets
 			_input = GetComponent<StarterAssetsInputs>();
 			_playerInput = GetComponent<PlayerInput>();
 
-			// reset our timeouts on start
+            if (PlayerManagement != null)
+            {
+                matchManager = PlayerManagement.matchManager;
+
+				GameObject enemyobj = PlayerManagement.Character[(PlayerIndex + 1) % PlayerManagement.Character.Length];
+                enemy = enemyobj.transform;
+                enemyCharacterController = enemyobj.GetComponent<CharacterController>();
+
+
+            }
+
+            // reset our timeouts on start
 			_jumpTimeoutDelta = JumpTimeout;
 			_fallTimeoutDelta = FallTimeout;
-		}
+
+			//オーディオの設定を入れる
+            if (VibrationAudioDependency)
+            {
+                MaxDistance = audioSource.maxDistance;
+                MinDistance = audioSource.minDistance;
+            }
+
+			
+        }
 
 		private void Update()
 		{
@@ -113,6 +156,7 @@ namespace StarterAssets
 			GroundedCheck();
 			Move();
 			Attack();
+			ControllerVibration();
 		}
 
 		private void LateUpdate()
@@ -285,14 +329,68 @@ namespace StarterAssets
 			_isAttacking = false;
 		}
 
-		private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
+        private void ControllerVibration()
+        {
+            //パッドが無かったら何もしない
+			if (gamepad == null)
+				return;
+
+			//敵がいない場合振動をオフにして終わる
+            if (enemy == null)
+            {
+                gamepad.SetMotorSpeeds(0.0f, 0.0f);
+                return;
+			}
+
+			//敵に近づいてるとき
+            if (NearEnemy)
+            {
+				NearEnemyProcess();
+            }
+
+			//敵に近づいててかつ敵が歩いてるとき
+            if (EnemyFootstep)
+            {
+				EnemyFootstepProcess();
+            }
+        }
+
+        private void NearEnemyProcess()
+        {
+			DistanceVibration();
+		}
+
+        private void EnemyFootstepProcess()
+        {
+            Vector2 vec = new Vector2(enemyCharacterController.velocity.x, enemyCharacterController.velocity.z);
+            if (vec.magnitude < 0.1f)
+            {
+                gamepad.SetMotorSpeeds(0.0f, 0.0f);
+                return;
+			}
+
+            DistanceVibration();
+        }
+
+        private void DistanceVibration()
+        {
+            float mag = 1.0f - (Mathf.Min((enemy.position - transform.position).magnitude, MaxDistance) / MaxDistance);
+            gamepad.SetMotorSpeeds(mag, mag);
+		}
+
+        private static Vector2 ClampVector2(Vector2 clamp, float max, float min)
+        {
+            return new Vector2(Mathf.Clamp(clamp.x, min, max), Mathf.Clamp(clamp.y, min, max));
+        }
+
+        private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
 		{
 			if (lfAngle < -360f) lfAngle += 360f;
 			if (lfAngle > 360f) lfAngle -= 360f;
 			return Mathf.Clamp(lfAngle, lfMin, lfMax);
 		}
 
-		private void OnDrawGizmosSelected()
+        private void OnDrawGizmosSelected()
 		{
 			Color transparentGreen = new Color(0.0f, 1.0f, 0.0f, 0.35f);
 			Color transparentRed = new Color(1.0f, 0.0f, 0.0f, 0.35f);
