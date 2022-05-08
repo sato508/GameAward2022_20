@@ -111,9 +111,9 @@ GameObject:
   - component: {fileID: 1005654033747183502}
   - component: {fileID: 3556315587164920830}
   - component: {fileID: 3005163757958416953}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: P1Capsule
-  m_TagString: Player
+  m_TagString: P1
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -184,7 +184,8 @@ MonoBehaviour:
   CinemachineCameraTarget: {fileID: 9199878887349396137}
   TopClamp: 89
   BottomClamp: -89
-  matchManager: {fileID: 0}
+  PlayerIndex: -1
+  PlayerManagement: {fileID: 0}
   SwordGrip: {fileID: 5102028687822299345}
   SwordRotator: {fileID: 5102028686962288023}
   SwordCollider: {fileID: 5102028687621823511}
@@ -193,6 +194,11 @@ MonoBehaviour:
   seSwing: {fileID: 8300000, guid: 22ede6d0e67ea9840be14cd9c7258f24, type: 3}
   PrefabAttack: {fileID: 260837229491980821, guid: c1e37f36fc3def34180f386f26acdeee, type: 3}
   PrefabDeath: {fileID: 6877663369844827563, guid: 4812e3b3d6bbdc0429834a13759aab36, type: 3}
+  NearEnemy: 1
+  EnemyFootstep: 0
+  VibrationAudioDependency: 0
+  MinDistance: 0
+  MaxDistance: 10
 --- !u!114 &6753989281852535042
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -350,9 +356,9 @@ AudioSource:
   Priority: 128
   DopplerLevel: 1
   MinDistance: 1
-  MaxDistance: 15
+  MaxDistance: 10
   Pan2D: 0
-  rolloffMode: 0
+  rolloffMode: 2
   BypassEffects: 0
   BypassListenerEffects: 0
   BypassReverbZones: 0
@@ -361,22 +367,22 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
+      value: 1.0041351
+      inSlope: -2.263018
+      outSlope: -2.263018
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
+      inWeight: 0
+      outWeight: 0.064328246
     - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
+      time: 0.96066284
+      value: 0.02029419
+      inSlope: -0.16315769
+      outSlope: -0.16315769
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
+      inWeight: 0.19276161
+      outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
