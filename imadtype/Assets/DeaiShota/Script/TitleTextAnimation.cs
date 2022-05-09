@@ -52,21 +52,14 @@ public class TitleTextAnimation : MonoBehaviour
     /// </summary>
     private RangeInt _PrimitiveIndexRange = new RangeInt(0, 0);
 
-    private void Awake()
-    {
-        _Text = GetComponent<TMP_Text>();
-        ResetMaterialAnimation();
-    }
-
-    private void OnDestroy()
-    {
-        ResetMaterialAnimation();
-    }
+    private TitleTextEvent _TitleTextEvent;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        _Text = GetComponent<TMP_Text>();
+        _TitleTextEvent = GetComponent<TitleTextEvent>();
+        ResetMaterialAnimation();
     }
 
     // Update is called once per frame
@@ -92,6 +85,7 @@ public class TitleTextAnimation : MonoBehaviour
                     _Time = _MaxAnimTime;
                     _IsPlaying = false;
                     ResetMaterialAnimation();
+                    _TitleTextEvent.NextEvent();
                 }
             }
 
@@ -99,6 +93,12 @@ public class TitleTextAnimation : MonoBehaviour
             UpdateAnimation(_Time / _MaxAnimTime);
         }
     }
+
+    private void OnDestroy()
+    {
+        ResetMaterialAnimation();
+    }
+
 
     /// <summary>
     /// マテリアル（アニメーション値）のリセット
@@ -217,7 +217,7 @@ public class TitleTextAnimation : MonoBehaviour
     /// <param name="LinkText"> 囲われたテキスト </param>
     /// <param name="LinkTextFirstCharaIndex"> Linkタグに囲われた文字列の先頭文字要素 </param>
     /// <param name="LinkIndex"> </param>
-    public void OnTouchLink(string LinkID, string LinkText, int LinkTextFirstCharaIndex, int LinkIndex = 0)
+    public void OnTouchLink(string LinkID, string LinkText, int LinkTextFirstCharaIndex, int LinkIndex)
     {
         _IsPlaying = true;
         _Time = 0.0f;
