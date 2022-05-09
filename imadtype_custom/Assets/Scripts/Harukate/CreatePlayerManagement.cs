@@ -4,6 +4,7 @@ using System.Globalization;
 using StarterAssets;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Users;
 
 public class CreatePlayerManagement : MonoBehaviour
 {
@@ -11,29 +12,50 @@ public class CreatePlayerManagement : MonoBehaviour
     public MatchManager matchManager;
     public GameObject[] PlayerPrefub;
 
-    public GameObject[] Character;
+    public PlayerInput[] Character;
+
+    public PlayerInputManager inputmanager;
 
     void Awake()
     {
-        Character = new GameObject[PlayerPrefub.Length];
+        var pad = Gamepad.all;
+
+        Character = new PlayerInput[PlayerPrefub.Length];
 
         //生成
         for (int i = 0; i < PlayerPrefub.Length; i++)
         {
-            Character[i] = CreatePlayer(PlayerPrefub[i]).gameObject;
-            var fpscon = Character[i].GetComponent<FirstPersonController>();
-            fpscon.PlayerManagement = this;
-            fpscon.PlayerIndex = i;
+            Character[i] = PlayerInput.Instantiate(PlayerPrefub[i], controlScheme: "Gamepad", pairWithDevices: Gamepad.all.ToArray());
+            Character[i].user.UnpairDevices();//すべてのデバイスリンク解除
+            InputUser.PerformPairingWithDevice(pad[i], Character[i].user);//デバイスをリンクする
+            TransmissionInputData(Character[i],i );//FirstPersonControllerにパッド情報送信
         }
 
         //アニメーション中入力出来ないようにする
         StartCoroutine(StayInputSystem());
     }
 
-    private PlayerInput CreatePlayer(GameObject player)
+    private PlayerInput CreatePlayer(GameObject player, InputDevice device, int i)
     {
-        var input = PlayerInput.Instantiate(player);
+        var input = PlayerInput.Instantiate(player, controlScheme: "Gamepad", pairWithDevice: device);
         return input;
+    }
+
+    private void TransmissionInputData(PlayerInput playerInput, int playerindex)
+    {
+        //FirstPersonController入手
+        var fpscon = playerInput.gameObject.GetComponent<FirstPersonController>();
+
+        //ゲームパッド探し
+        foreach (var device in playerInput.devices)
+        {
+            //nullじゃない場合入れる
+            if (device is Gamepad pad)
+                fpscon.gamepad = pad;
+        }
+
+        fpscon.PlayerManagement = this;
+        fpscon.PlayerIndex = playerindex;
     }
 
     private IEnumerator StayInputSystem()
@@ -52,24 +74,6 @@ public class CreatePlayerManagement : MonoBehaviour
         foreach (var gamepad in gamepads)
         {
             InputSystem.EnableDevice(gamepad);
-        }
-    }
-
-    public void OnPlayerJoined(PlayerInput playerInput)
-    {
-        Debug.Log(playerInput.gameObject.name + "参加");
-
-        //FirstPersonController入手
-        var fpscon = playerInput.gameObject.GetComponent<FirstPersonController>();
-
-        //ゲームパッド探し
-        foreach (var device in playerInput.devices)
-        {
-            //nullじゃない場合入れる
-            if (device is Gamepad pad)
-                fpscon.gamepad = pad;
-
-            Debug.Log("デバイス名：" + device.name);
         }
     }
 }
