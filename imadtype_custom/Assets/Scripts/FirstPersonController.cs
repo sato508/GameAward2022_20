@@ -129,11 +129,9 @@ namespace StarterAssets
             {
                 matchManager = PlayerManagement.matchManager;
 
-				GameObject enemyobj = PlayerManagement.Character[(PlayerIndex + 1) % PlayerManagement.Character.Length];
+				GameObject enemyobj = PlayerManagement.Character[(PlayerIndex + 1) % PlayerManagement.Character.Length].gameObject;
                 enemy = enemyobj.transform;
                 enemyCharacterController = enemyobj.GetComponent<CharacterController>();
-
-
             }
 
             // reset our timeouts on start
