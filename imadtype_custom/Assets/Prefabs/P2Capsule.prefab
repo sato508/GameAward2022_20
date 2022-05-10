@@ -5185,7 +5185,7 @@ MonoBehaviour:
   PrefabAttack: {fileID: 260837229491980821, guid: c1e37f36fc3def34180f386f26acdeee, type: 3}
   PrefabDeath: {fileID: 6877663369844827563, guid: 4812e3b3d6bbdc0429834a13759aab36, type: 3}
   NearEnemy: 0
-  EnemyFootstep: 1
+  EnemyFootstep: 0
   VibrationAudioDependency: 0
   MinDistance: 0
   MaxDistance: 10
@@ -5672,7 +5672,7 @@ PrefabInstance:
       objectReference: {fileID: 558069848187508847}
     - target: {fileID: 8762286023885395323, guid: 9c489a8547f4d9e4387da15a4ff82c81, type: 3}
       propertyPath: m_Lens.m_SensorSize.x
-      value: 1.7777778
+      value: 1.3333334
       objectReference: {fileID: 0}
     - target: {fileID: 8762286024517199033, guid: 9c489a8547f4d9e4387da15a4ff82c81, type: 3}
       propertyPath: m_Layer

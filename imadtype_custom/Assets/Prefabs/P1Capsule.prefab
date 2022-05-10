@@ -194,7 +194,7 @@ MonoBehaviour:
   seSwing: {fileID: 8300000, guid: 22ede6d0e67ea9840be14cd9c7258f24, type: 3}
   PrefabAttack: {fileID: 260837229491980821, guid: c1e37f36fc3def34180f386f26acdeee, type: 3}
   PrefabDeath: {fileID: 6877663369844827563, guid: 4812e3b3d6bbdc0429834a13759aab36, type: 3}
-  NearEnemy: 1
+  NearEnemy: 0
   EnemyFootstep: 0
   VibrationAudioDependency: 0
   MinDistance: 0
@@ -5730,19 +5730,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9005220659476430818, guid: 2d3a85ecde41a8246a79669975912b74, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 12.981851
+      value: 13.197221
       objectReference: {fileID: 0}
     - target: {fileID: 9005220659476430818, guid: 2d3a85ecde41a8246a79669975912b74, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 10.538525
+      value: 10.892054
       objectReference: {fileID: 0}
     - target: {fileID: 9005220659476430818, guid: 2d3a85ecde41a8246a79669975912b74, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.8118991
+      value: 0.7984471
       objectReference: {fileID: 0}
     - target: {fileID: 9005220659476430818, guid: 2d3a85ecde41a8246a79669975912b74, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.5837978
+      value: 0.60206497
       objectReference: {fileID: 0}
     - target: {fileID: 9005220659476430818, guid: 2d3a85ecde41a8246a79669975912b74, type: 3}
       propertyPath: m_LocalRotation.y
