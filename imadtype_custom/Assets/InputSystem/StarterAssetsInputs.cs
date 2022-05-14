@@ -17,9 +17,6 @@ namespace StarterAssets
 		[Header("Movement Settings")]
 		public bool analogMovement;
 
-        [Header("ì¸óÕéÛÇØéÊÇËèÛë‘")] 
-        public bool InputState = true;
-
 #if !UNITY_IOS || !UNITY_ANDROID
 		[Header("Mouse Cursor Settings")]
 		public bool cursorLocked = true;
@@ -27,32 +24,32 @@ namespace StarterAssets
 #endif
 
 #if ENABLE_INPUT_SYSTEM && STARTER_ASSETS_PACKAGES_CHECKED
-		public void OnMove(InputValue value)
+		public void OnMove(InputAction.CallbackContext context)
 		{
-			MoveInput(value.Get<Vector2>());
+            MoveInput(context.ReadValue<Vector2>());
         }
 
-		public void OnLook(InputValue value)
+		public void OnLook(InputAction.CallbackContext context)
 		{
 			if(cursorInputForLook)
 			{
-				LookInput(value.Get<Vector2>());
+				LookInput(context.ReadValue<Vector2>());
 			}
 		}
 
-		public void OnJump(InputValue value)
+		public void OnJump(InputAction.CallbackContext context)
 		{
-			JumpInput(value.isPressed);
+			JumpInput(true);
 		}
 
-		public void OnSprint(InputValue value)
+		public void OnSprint(InputAction.CallbackContext context)
 		{
-			SprintInput(value.isPressed);
+			SprintInput(true);
 		}
 
-		public void OnAttack(InputValue value)
+		public void OnAttack(InputAction.CallbackContext context)
 		{
-			AttackInput(value.isPressed);
+			AttackInput(true);
 		}
 #else
 	// old input sys if we do decide to have it (most likely wont)...
@@ -61,42 +58,27 @@ namespace StarterAssets
 
 		public void MoveInput(Vector2 newMoveDirection)
 		{
-			if(!InputState)
-				return;
-
-			move = newMoveDirection;
+            move = newMoveDirection;
 		} 
 
 		public void LookInput(Vector2 newLookDirection)
 		{
-            if (!InputState)
-                return;
-
-			look = newLookDirection;
+            look = newLookDirection;
 		}
 
 		public void JumpInput(bool newJumpState)
 		{
-            if (!InputState)
-                return;
-
-			jump = newJumpState;
+            jump = newJumpState;
 		}
 
 		public void SprintInput(bool newSprintState)
 		{
-            if (!InputState)
-                return;
-
-			sprint = newSprintState;
+            sprint = newSprintState;
 		}
 
 		public void AttackInput(bool newAttackState)
 		{
-            if (!InputState)
-                return;
-
-			attack = newAttackState;
+            attack = newAttackState;
 		}
 
 #if !UNITY_IOS || !UNITY_ANDROID
