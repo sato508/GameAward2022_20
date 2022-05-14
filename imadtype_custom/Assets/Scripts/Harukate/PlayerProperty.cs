@@ -31,7 +31,7 @@ public class PlayerProperty : ScriptableObject
     [Tooltip("段差対策のオフセット")]
     public float GroundedOffset = -0.14f;
     [Tooltip("地面判定を受け取る当たり判定の半径")]
-    public float GroundedRadius = 0.5f;
+    public float GroundedRadius = 0.4f;
     [Tooltip("地面のレイヤー")]
     public LayerMask GroundLayers;
 
@@ -40,6 +40,12 @@ public class PlayerProperty : ScriptableObject
     public float TopClamp = 90.0f;
     [Tooltip("カメラを何度まで下げられるか")]
     public float BottomClamp = -90.0f;
+
+    [Header("攻撃")]
+    [Tooltip("攻撃を出し入れする速度")]
+    public float AttackPopOutSpeed = 0.3f;
+    [Tooltip("攻撃回転速度")]
+    public float AttaclSpeed = 0.5f;
 
     [Header("Sound")]
     [Tooltip("攻撃音")]

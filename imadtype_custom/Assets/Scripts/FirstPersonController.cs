@@ -2,9 +2,14 @@ using System;
 using System.Collections;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
+using UnityExtensions;
+using UnityExtensions.InspectInlineExamples;
 #if ENABLE_INPUT_SYSTEM && STARTER_ASSETS_PACKAGES_CHECKED
 using UnityEngine.InputSystem;
 #endif
+
+
 
 namespace StarterAssets
 {
@@ -24,7 +29,7 @@ namespace StarterAssets
 		public GameObject CinemachineCameraTarget;
 
         [Header("Player")] 
-		[Tooltip("プロパティ設定場所")]
+		[Tooltip("プロパティ設定場所"), InspectInline(canEditRemoteTarget = true)]
         public PlayerProperty playerProperty;
 
         [Header("Player")]
@@ -74,13 +79,17 @@ namespace StarterAssets
 		private GameObject _mainCamera;
         private MatchManager matchManager;
 
+        private bool _isJump = false;
+
 		//敵情報
         private Transform enemy;
         private CharacterController enemyCharacterController;
 
 		private const float _threshold = 0.01f;
 		
+#if UNITY_EDITOR
 		private bool IsCurrentDeviceMouse => _playerInput.currentControlScheme == "KeyboardMouse";
+#endif
 
 		private void Awake()
 		{
@@ -159,6 +168,10 @@ namespace StarterAssets
 
 		private void GroundedCheck()
 		{
+			//ジャンプ中は判定しない
+			if(_isJump)
+				return;
+
 			// set sphere position, with offset
 			Vector3 spherePosition = new Vector3(transform.position.x, transform.position.y - playerProperty.GroundedOffset, transform.position.z);
 			Grounded = Physics.CheckSphere(spherePosition, playerProperty.GroundedRadius, playerProperty.GroundLayers, QueryTriggerInteraction.Ignore);
@@ -168,10 +181,16 @@ namespace StarterAssets
 		{
 			// if there is an input
 			if (_input.look.sqrMagnitude >= _threshold)
-			{
+            {
+                float deltaTimeMultiplier = 1.0f;
+
+#if UNITY_EDITOR
 				//Don't multiply mouse input by Time.deltaTime
-				float deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
-				
+				deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
+#else
+				deltaTimeMultiplier = Time.deltaTime;
+
+#endif
 				_cinemachineTargetPitch += _input.look.y * playerProperty.RotationSpeed * deltaTimeMultiplier;
 				_rotationVelocity = _input.look.x * playerProperty.RotationSpeed * deltaTimeMultiplier;
 
@@ -235,50 +254,59 @@ namespace StarterAssets
 
 		private void JumpAndGravity()
 		{
-			if (Grounded)
+            if (Grounded)
 			{
-				// reset the fall timeout timer
+                // 落下クールタイムリセット
 				_fallTimeoutDelta = playerProperty.FallTimeout;
 
-				// stop our velocity dropping infinitely when grounded
+                // 上下の加速度がおかしな数値にならないように抑制する
 				if (_verticalVelocity < 0.0f)
 				{
 					_verticalVelocity = -2f;
 				}
 
-				// Jump
+                // ジャンプ
 				if (_input.jump && _jumpTimeoutDelta <= 0.0f)
 				{
-					// the square root of H * -2 * G = how much velocity needed to reach desired height
+					// H * -2 * G の平方根 = 望みの高さに到達するために必要な速度
 					_verticalVelocity = Mathf.Sqrt(playerProperty.JumpHeight * -2f * playerProperty.Gravity);
+                    _isJump = true;
+                    Grounded = false;
                 }
 
-				// jump timeout
+				// ジャンプクールタイム
 				if (_jumpTimeoutDelta >= 0.0f)
 				{
 					_jumpTimeoutDelta -= Time.deltaTime;
-				}
-			}
+                }
+            }
 			else
 			{
-				// reset the jump timeout timer
+				// ジャンプクールタイムリセット
 				_jumpTimeoutDelta = playerProperty.JumpTimeout;
 
-				// fall timeout
+				// 落下クールタイム
 				if (_fallTimeoutDelta >= 0.0f)
 				{
 					_fallTimeoutDelta -= Time.deltaTime;
 				}
 
-				// if we are not grounded, do not jump
-				_input.jump = false;
+				//上昇中に天井に当たった場合即時落下する
+                if (_controller.velocity.y == 0.0f)
+                {
+                    _isJump = false;
+                    _verticalVelocity = 0.0f;
+                }
+
+				//ジャンプ入力受け付けるようにする
+                _input.jump = false;
 			}
 
-			// apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
+
+            // 重力で落とす
 			if (_verticalVelocity < _terminalVelocity)
 			{
-				_verticalVelocity += playerProperty.Gravity * Time.deltaTime;
-                
+                _verticalVelocity += playerProperty.Gravity * Time.deltaTime;
             }
 		}
 
@@ -294,18 +322,18 @@ namespace StarterAssets
 		{
 			_isAttacking = true;
 			var originalGripPos = SwordGrip.localPosition;
-			SwordGrip.DOLocalMove(Vector3.zero, 0.3f).WaitForCompletion();
-			yield return SwordGrip.DOLocalRotate(new Vector3(0, 90, 70), 0.3f).WaitForCompletion();
+			SwordGrip.DOLocalMove(Vector3.zero, playerProperty.AttackPopOutSpeed).WaitForCompletion();
+			yield return SwordGrip.DOLocalRotate(new Vector3(0, 90, 70), playerProperty.AttackPopOutSpeed).WaitForCompletion();
 
 			Instantiate(PrefabAttack, transform.position, Quaternion.identity);
 			SwordCollider.enabled = true;
 			SwordTrail.Play();
 			audioSource.PlayOneShot(playerProperty.seSwing);
-			yield return SwordRotator.DOLocalRotate(new Vector3(0, -360, 0), 0.5f, RotateMode.FastBeyond360).WaitForCompletion();
+			yield return SwordRotator.DOLocalRotate(new Vector3(0, -360, 0), playerProperty.AttaclSpeed, RotateMode.FastBeyond360).WaitForCompletion();
 
 			SwordTrail.Stop();
-			SwordGrip.DOLocalMove(originalGripPos, 0.2f).WaitForCompletion();
-			yield return SwordGrip.DOLocalRotate(Vector3.zero, 0.2f).WaitForCompletion();
+			SwordGrip.DOLocalMove(originalGripPos, playerProperty.AttackPopOutSpeed).WaitForCompletion();
+			yield return SwordGrip.DOLocalRotate(Vector3.zero, playerProperty.AttackPopOutSpeed).WaitForCompletion();
 
 			yield return null;
 
@@ -342,11 +370,13 @@ namespace StarterAssets
 
         private void NearEnemyProcess()
         {
+			//距離で振動
 			DistanceVibration();
 		}
 
         private void EnemyFootstepProcess()
         {
+			//歩いてたら振動
             Vector2 vec = new Vector2(enemyCharacterController.velocity.x, enemyCharacterController.velocity.z);
             if (vec.magnitude < 0.1f)
             {
@@ -354,11 +384,13 @@ namespace StarterAssets
                 return;
 			}
 
+			//振動
             DistanceVibration();
         }
 
         private void DistanceVibration()
         {
+			//距離に合わせて振動させる
             float mag = 1.0f - (Mathf.Min((enemy.position - transform.position).magnitude, MaxDistance) / MaxDistance);
             gamepad.SetMotorSpeeds(mag, mag);
 		}

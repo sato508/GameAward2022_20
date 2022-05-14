@@ -27,4 +27,6 @@ MonoBehaviour:
     m_Bits: 512
   TopClamp: 90
   BottomClamp: -90
+  AttackPopOutSpeed: 0.3
+  AttaclSpeed: 0.5
   seSwing: {fileID: 8300000, guid: 22ede6d0e67ea9840be14cd9c7258f24, type: 3}

@@ -38,18 +38,18 @@ namespace StarterAssets
 		}
 
 		public void OnJump(InputAction.CallbackContext context)
-		{
-			JumpInput(true);
-		}
+        {
+            JumpInput(context.ReadValue<float>() >= InputSystem.settings.defaultButtonPressPoint);
+        }
 
 		public void OnSprint(InputAction.CallbackContext context)
 		{
-			SprintInput(true);
+			SprintInput(context.ReadValue<float>() >= InputSystem.settings.defaultButtonPressPoint);
 		}
 
 		public void OnAttack(InputAction.CallbackContext context)
 		{
-			AttackInput(true);
+			AttackInput(context.ReadValue<float>() >= InputSystem.settings.defaultButtonPressPoint);
 		}
 #else
 	// old input sys if we do decide to have it (most likely wont)...
@@ -68,7 +68,7 @@ namespace StarterAssets
 
 		public void JumpInput(bool newJumpState)
 		{
-            jump = newJumpState;
+            jump |= newJumpState;
 		}
 
 		public void SprintInput(bool newSprintState)
@@ -78,7 +78,7 @@ namespace StarterAssets
 
 		public void AttackInput(bool newAttackState)
 		{
-            attack = newAttackState;
+            attack |= newAttackState;
 		}
 
 #if !UNITY_IOS || !UNITY_ANDROID

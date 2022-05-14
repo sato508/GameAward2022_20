@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Numerics;
 using Cinemachine;
 using StarterAssets;
@@ -35,7 +36,7 @@ public class PlayerManagement : MonoBehaviour
     public Transform[] StartPosition;
 
     //キャラクター情報
-    private GameObject[] _character;
+    private PlayerInput[] _character;
 
     private GameObject[] _camera;
     public GameObject[] CharacterCamera
@@ -52,46 +53,48 @@ public class PlayerManagement : MonoBehaviour
 
         var pad = Gamepad.all;
 
-        _character = new GameObject[PlayerCount];
+        _character = new PlayerInput[PlayerCount];
         _camera = new GameObject[PlayerCount];
 
         //生成
         for (int i = 0; i < PlayerCount; i++)
         {
-            PlayerInput input;
 #if UNITY_EDITOR
             //キーボードマウス込み
             if (EnableKeybordMouse && i == 0)
             {
-                input = PlayerInput.Instantiate(PlayerPrefub,
+                _character[i] = PlayerInput.Instantiate(PlayerPrefub,
                     pairWithDevices: new InputDevice[] {Keyboard.current, Mouse.current});
             }
+#endif
+#if UNITY_EDITOR
             else
             {
-                if (pad.Count <= i)
-                    break;
-
-                input = PlayerInput.Instantiate(PlayerPrefub, pairWithDevice: pad[i]);
-            }
-#else
-            if (pad.Count <= i)
-                    break;
-                    
-            input = PlayerInput.Instantiate(PlayerPrefub, pairWithDevice: pad[i]);
 #endif
-
-            //保持
-            _character[i] = input.gameObject;
-
+                //何も紐づけずに作成する
+                if (pad.Count <= i)
+                {
+                    _character[i] = PlayerInput.Instantiate(PlayerPrefub);
+                    _character[i].user.UnpairDevices();
+                }
+                else//パッドを紐づけて作成
+                {
+                    _character[i] = PlayerInput.Instantiate(PlayerPrefub, pairWithDevices: pad[i]);
+                    _character[i].user.UnpairDevices();
+                    InputUser.PerformPairingWithDevice(pad[i], _character[i].user);
+                }
+#if UNITY_EDITOR
+            }
+#endif
             //座標と回転をセット
             _character[i].transform.SetPositionAndRotation(StartPosition[i].position, StartPosition[i].rotation);
 
             //FirstPersonControllerに情報送信
-            TransmissionPlayerData(input, i);
+            TransmissionPlayerData(_character[i], i);
 
             //カメラ生成
             _camera[i] = Instantiate(CameraPrefub);
-            TransmissionCameraData(_camera[i], _character[i], i);
+            TransmissionCameraData(_camera[i], _character[i].gameObject, i);
         }
 
         //アニメーション中入力出来ないようにする
@@ -155,30 +158,12 @@ public class PlayerManagement : MonoBehaviour
     //敵のオブジェクトを取得する
     public GameObject GetEnemy(int MyPlayerIndex)
     {
-        for (int i = 0; i < _character.Length; i++)
-        {
-            if(MyPlayerIndex == i)
-                continue;
-
-            return _character[i];
-        }
-
-        return null;
+        return _character.Where((t, i) => MyPlayerIndex != i).Select(t => t.gameObject).FirstOrDefault();
     }
 
     //敵のオブジェクトを取得する(リスト)
     public List<GameObject> GetEnemyList(int MyPlayerIndex)
     {
-        List<GameObject> enemy = new List<GameObject>();
-
-        for (int i = 0; i < _character.Length; i++)
-        {
-            if(MyPlayerIndex == i)
-                continue;
-
-            enemy.Add(_character[i]);
-        }
-
-        return enemy;
+        return _character.Where((t, i) => MyPlayerIndex != i).Select(t => t.gameObject).ToList();
     }
 }
