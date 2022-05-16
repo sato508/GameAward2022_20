@@ -5251,32 +5251,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55919ac34a26952479f3fc91f777b2fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MoveSpeed: 4
-  SprintSpeed: 6
-  RotationSpeed: 2.2
-  SpeedChangeRate: 10
-  JumpHeight: 1.2
-  Gravity: -15
-  JumpTimeout: 0.1
-  FallTimeout: 0.15
   Grounded: 1
-  GroundedOffset: -0.14
-  GroundedRadius: 0.5
-  GroundLayers:
-    serializedVersion: 2
-    m_Bits: 1
   CinemachineCameraTarget: {fileID: 4135013735270702863}
-  TopClamp: 89
-  BottomClamp: -89
-  matchManager: {fileID: 0}
+  playerProperty: {fileID: 11400000, guid: 5dd0bf8ad1a68104d85eba7c2c208825, type: 2}
   SwordGrip: {fileID: 850943351}
   SwordRotator: {fileID: 1090852913}
   SwordCollider: {fileID: 649421233}
   SwordTrail: {fileID: 1246966284}
   audioSource: {fileID: 8032856629513107359}
-  seSwing: {fileID: 8300000, guid: 22ede6d0e67ea9840be14cd9c7258f24, type: 3}
   PrefabAttack: {fileID: 260837229491980821, guid: c1e37f36fc3def34180f386f26acdeee, type: 3}
   PrefabDeath: {fileID: 6877663369844827563, guid: 4812e3b3d6bbdc0429834a13759aab36, type: 3}
+  NearEnemy: 1
+  EnemyFootstep: 0
+  VibrationAudioDependency: 1
+  MinDistance: 0
+  MaxDistance: 15
+  PlayerIndex: 0
+  PlayerManagement: {fileID: 0}
 --- !u!114 &1978471637655604388
 MonoBehaviour:
   m_ObjectHideFlags: 0

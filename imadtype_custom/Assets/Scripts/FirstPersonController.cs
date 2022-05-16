@@ -2,9 +2,14 @@ using System;
 using System.Collections;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
+using UnityExtensions;
+using UnityExtensions.InspectInlineExamples;
 #if ENABLE_INPUT_SYSTEM && STARTER_ASSETS_PACKAGES_CHECKED
 using UnityEngine.InputSystem;
 #endif
+
+
 
 namespace StarterAssets
 {
@@ -14,60 +19,27 @@ namespace StarterAssets
 #endif
 	public class FirstPersonController : MonoBehaviour
 	{
-		[Header("Player")]
-		[Tooltip("Move speed of the character in m/s")]
-		public float MoveSpeed = 4.0f;
-		[Tooltip("Sprint speed of the character in m/s")]
-		public float SprintSpeed = 6.0f;
-		[Tooltip("Rotation speed of the character")]
-		public float RotationSpeed = 1.0f;
-		[Tooltip("Acceleration and deceleration")]
-		public float SpeedChangeRate = 10.0f;
 
-		[Space(10)]
-		[Tooltip("The height the player can jump")]
-		public float JumpHeight = 1.2f;
-		[Tooltip("The character uses its own gravity value. The engine default is -9.81f")]
-		public float Gravity = -15.0f;
-
-		[Space(10)]
-		[Tooltip("Time required to pass before being able to jump again. Set to 0f to instantly jump again")]
-		public float JumpTimeout = 0.1f;
-		[Tooltip("Time required to pass before entering the fall state. Useful for walking down stairs")]
-		public float FallTimeout = 0.15f;
-
-		[Header("Player Grounded")]
-		[Tooltip("If the character is grounded or not. Not part of the CharacterController built in grounded check")]
+        [Header("地面判定")]
+		[Tooltip("地面に乗ってるかチェック用　切り替えて使わない")]
 		public bool Grounded = true;
-		[Tooltip("Useful for rough ground")]
-		public float GroundedOffset = -0.14f;
-		[Tooltip("The radius of the grounded check. Should match the radius of the CharacterController")]
-		public float GroundedRadius = 0.5f;
-		[Tooltip("What layers the character uses as ground")]
-		public LayerMask GroundLayers;
 
-		[Header("Cinemachine")]
-		[Tooltip("The follow target set in the Cinemachine Virtual Camera that the camera will follow")]
+        [Header("Cinemachine")]
+		[Tooltip("Cinemachineのターゲットオブジェクト")]
 		public GameObject CinemachineCameraTarget;
-		[Tooltip("How far in degrees can you move the camera up")]
-		public float TopClamp = 90.0f;
-		[Tooltip("How far in degrees can you move the camera down")]
-		public float BottomClamp = -90.0f;
 
         [Header("Player")] 
-        public int PlayerIndex = -1;
-        public CreatePlayerManagement PlayerManagement;
-        public Gamepad gamepad = null;
-		public Transform SwordGrip;
+		[Tooltip("プロパティ設定場所"), InspectInline(canEditRemoteTarget = true)]
+        public PlayerProperty playerProperty;
+
+        [Header("Player")]
+        public Transform SwordGrip;
 		public Transform SwordRotator;
 		public Collider SwordCollider;
 		public ParticleSystem SwordTrail;
 		public AudioSource audioSource;
-		public AudioClip seSwing;
-		public GameObject PrefabAttack;
+        public GameObject PrefabAttack;
 		public GameObject PrefabDeath;
-
-        
 
         [Header("ゲームパッドのバイブレーション設定")]
 		[Tooltip("敵が近づいたとき")]
@@ -82,7 +54,12 @@ namespace StarterAssets
         [Tooltip("振動が始まる距離")]
         public float MaxDistance = 15.0f;
 
-        // cinemachine
+		[Header("自動設定されるやつ")]
+        public int PlayerIndex;
+        public PlayerManagement PlayerManagement;
+        public Gamepad gamepad = null;
+
+		// cinemachine
 		private float _cinemachineTargetPitch;
 
 		// player
@@ -102,13 +79,17 @@ namespace StarterAssets
 		private GameObject _mainCamera;
         private MatchManager matchManager;
 
+        private bool _isJump = false;
+
 		//敵情報
         private Transform enemy;
         private CharacterController enemyCharacterController;
 
 		private const float _threshold = 0.01f;
 		
+#if UNITY_EDITOR
 		private bool IsCurrentDeviceMouse => _playerInput.currentControlScheme == "KeyboardMouse";
+#endif
 
 		private void Awake()
 		{
@@ -129,14 +110,18 @@ namespace StarterAssets
             {
                 matchManager = PlayerManagement.matchManager;
 
-				GameObject enemyobj = PlayerManagement.Character[(PlayerIndex + 1) % PlayerManagement.Character.Length].gameObject;
-                enemy = enemyobj.transform;
-                enemyCharacterController = enemyobj.GetComponent<CharacterController>();
+				GameObject enemyobj = PlayerManagement.GetEnemy(PlayerIndex);
+                if (enemyobj != null)
+                {
+                    enemy = enemyobj.transform;
+                    enemyCharacterController = enemyobj.GetComponent<CharacterController>();
+				}
+                
             }
 
             // reset our timeouts on start
-			_jumpTimeoutDelta = JumpTimeout;
-			_fallTimeoutDelta = FallTimeout;
+			_jumpTimeoutDelta = playerProperty.JumpTimeout;
+			_fallTimeoutDelta = playerProperty.FallTimeout;
 
 			//オーディオの設定を入れる
             if (VibrationAudioDependency)
@@ -145,21 +130,33 @@ namespace StarterAssets
                 MinDistance = audioSource.minDistance;
             }
 
-			
+			//ゲームパッドデバイス取得
+            foreach (var device in _playerInput.devices)
+            {
+                if (device is Gamepad pad)
+                {
+                    gamepad = pad;
+					break;
+				}
+            }
         }
 
 		private void Update()
 		{
+           
+
 			JumpAndGravity();
 			GroundedCheck();
 			Move();
 			Attack();
 			ControllerVibration();
+
+           
 		}
 
 		private void LateUpdate()
 		{
-			CameraRotation();
+            CameraRotation();
 		}
 
 		public void Die(){
@@ -171,25 +168,34 @@ namespace StarterAssets
 
 		private void GroundedCheck()
 		{
+			//ジャンプ中は判定しない
+			if(_isJump)
+				return;
+
 			// set sphere position, with offset
-			Vector3 spherePosition = new Vector3(transform.position.x, transform.position.y - GroundedOffset, transform.position.z);
-			Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, GroundLayers, QueryTriggerInteraction.Ignore);
-            
+			Vector3 spherePosition = new Vector3(transform.position.x, transform.position.y - playerProperty.GroundedOffset, transform.position.z);
+			Grounded = Physics.CheckSphere(spherePosition, playerProperty.GroundedRadius, playerProperty.GroundLayers, QueryTriggerInteraction.Ignore);
         }
 
 		private void CameraRotation()
 		{
 			// if there is an input
 			if (_input.look.sqrMagnitude >= _threshold)
-			{
+            {
+                float deltaTimeMultiplier = 1.0f;
+
+#if UNITY_EDITOR
 				//Don't multiply mouse input by Time.deltaTime
-				float deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
-				
-				_cinemachineTargetPitch += _input.look.y * RotationSpeed * deltaTimeMultiplier;
-				_rotationVelocity = _input.look.x * RotationSpeed * deltaTimeMultiplier;
+				deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
+#else
+				deltaTimeMultiplier = Time.deltaTime;
+
+#endif
+				_cinemachineTargetPitch += _input.look.y * playerProperty.RotationSpeed * deltaTimeMultiplier;
+				_rotationVelocity = _input.look.x * playerProperty.RotationSpeed * deltaTimeMultiplier;
 
 				// clamp our pitch rotation
-				_cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, BottomClamp, TopClamp);
+				_cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, playerProperty.BottomClamp, playerProperty.TopClamp);
 
 				// Update Cinemachine camera target pitch
 				CinemachineCameraTarget.transform.localRotation = Quaternion.Euler(_cinemachineTargetPitch, 0.0f, 0.0f);
@@ -202,7 +208,7 @@ namespace StarterAssets
 		private void Move()
 		{
 			// set target speed based on move speed, sprint speed and if sprint is pressed
-			float targetSpeed = _input.sprint ? SprintSpeed : MoveSpeed;
+			float targetSpeed = _input.sprint ? playerProperty.SprintSpeed : playerProperty.MoveSpeed;
 
 			// a simplistic acceleration and deceleration designed to be easy to remove, replace, or iterate upon
 
@@ -221,7 +227,7 @@ namespace StarterAssets
 			{
 				// creates curved result rather than a linear one giving a more organic speed change
 				// note T in Lerp is clamped, so we don't need to clamp our speed
-				_speed = Mathf.Lerp(currentHorizontalSpeed, targetSpeed * inputMagnitude, Time.deltaTime * SpeedChangeRate);
+				_speed = Mathf.Lerp(currentHorizontalSpeed, targetSpeed * inputMagnitude, Time.deltaTime * playerProperty.SpeedChangeRate);
 
 				// round speed to 3 decimal places
 				_speed = Mathf.Round(_speed * 1000f) / 1000f;
@@ -248,50 +254,59 @@ namespace StarterAssets
 
 		private void JumpAndGravity()
 		{
-			if (Grounded)
+            if (Grounded)
 			{
-				// reset the fall timeout timer
-				_fallTimeoutDelta = FallTimeout;
+                // 落下クールタイムリセット
+				_fallTimeoutDelta = playerProperty.FallTimeout;
 
-				// stop our velocity dropping infinitely when grounded
+                // 上下の加速度がおかしな数値にならないように抑制する
 				if (_verticalVelocity < 0.0f)
 				{
 					_verticalVelocity = -2f;
 				}
 
-				// Jump
+                // ジャンプ
 				if (_input.jump && _jumpTimeoutDelta <= 0.0f)
 				{
-					// the square root of H * -2 * G = how much velocity needed to reach desired height
-					_verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
+					// H * -2 * G の平方根 = 望みの高さに到達するために必要な速度
+					_verticalVelocity = Mathf.Sqrt(playerProperty.JumpHeight * -2f * playerProperty.Gravity);
+                    _isJump = true;
+                    Grounded = false;
                 }
 
-				// jump timeout
+				// ジャンプクールタイム
 				if (_jumpTimeoutDelta >= 0.0f)
 				{
 					_jumpTimeoutDelta -= Time.deltaTime;
-				}
-			}
+                }
+            }
 			else
 			{
-				// reset the jump timeout timer
-				_jumpTimeoutDelta = JumpTimeout;
+				// ジャンプクールタイムリセット
+				_jumpTimeoutDelta = playerProperty.JumpTimeout;
 
-				// fall timeout
+				// 落下クールタイム
 				if (_fallTimeoutDelta >= 0.0f)
 				{
 					_fallTimeoutDelta -= Time.deltaTime;
 				}
 
-				// if we are not grounded, do not jump
-				_input.jump = false;
+				//上昇中に天井に当たった場合即時落下する
+                if (_controller.velocity.y == 0.0f)
+                {
+                    _isJump = false;
+                    _verticalVelocity = 0.0f;
+                }
+
+				//ジャンプ入力受け付けるようにする
+                _input.jump = false;
 			}
 
-			// apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
+
+            // 重力で落とす
 			if (_verticalVelocity < _terminalVelocity)
 			{
-				_verticalVelocity += Gravity * Time.deltaTime;
-                
+                _verticalVelocity += playerProperty.Gravity * Time.deltaTime;
             }
 		}
 
@@ -307,18 +322,18 @@ namespace StarterAssets
 		{
 			_isAttacking = true;
 			var originalGripPos = SwordGrip.localPosition;
-			SwordGrip.DOLocalMove(Vector3.zero, 0.3f).WaitForCompletion();
-			yield return SwordGrip.DOLocalRotate(new Vector3(0, 90, 70), 0.3f).WaitForCompletion();
+			SwordGrip.DOLocalMove(Vector3.zero, playerProperty.AttackPopOutSpeed).WaitForCompletion();
+			yield return SwordGrip.DOLocalRotate(new Vector3(0, 90, 70), playerProperty.AttackPopOutSpeed).WaitForCompletion();
 
 			Instantiate(PrefabAttack, transform.position, Quaternion.identity);
 			SwordCollider.enabled = true;
 			SwordTrail.Play();
-			audioSource.PlayOneShot(seSwing);
-			yield return SwordRotator.DOLocalRotate(new Vector3(0, -360, 0), 0.5f, RotateMode.FastBeyond360).WaitForCompletion();
+			audioSource.PlayOneShot(playerProperty.seSwing);
+			yield return SwordRotator.DOLocalRotate(new Vector3(0, -360, 0), playerProperty.AttaclSpeed, RotateMode.FastBeyond360).WaitForCompletion();
 
 			SwordTrail.Stop();
-			SwordGrip.DOLocalMove(originalGripPos, 0.2f).WaitForCompletion();
-			yield return SwordGrip.DOLocalRotate(Vector3.zero, 0.2f).WaitForCompletion();
+			SwordGrip.DOLocalMove(originalGripPos, playerProperty.AttackPopOutSpeed).WaitForCompletion();
+			yield return SwordGrip.DOLocalRotate(Vector3.zero, playerProperty.AttackPopOutSpeed).WaitForCompletion();
 
 			yield return null;
 
@@ -355,11 +370,13 @@ namespace StarterAssets
 
         private void NearEnemyProcess()
         {
+			//距離で振動
 			DistanceVibration();
 		}
 
         private void EnemyFootstepProcess()
         {
+			//歩いてたら振動
             Vector2 vec = new Vector2(enemyCharacterController.velocity.x, enemyCharacterController.velocity.z);
             if (vec.magnitude < 0.1f)
             {
@@ -367,11 +384,13 @@ namespace StarterAssets
                 return;
 			}
 
+			//振動
             DistanceVibration();
         }
 
         private void DistanceVibration()
         {
+			//距離に合わせて振動させる
             float mag = 1.0f - (Mathf.Min((enemy.position - transform.position).magnitude, MaxDistance) / MaxDistance);
             gamepad.SetMotorSpeeds(mag, mag);
 		}
@@ -386,18 +405,6 @@ namespace StarterAssets
 			if (lfAngle < -360f) lfAngle += 360f;
 			if (lfAngle > 360f) lfAngle -= 360f;
 			return Mathf.Clamp(lfAngle, lfMin, lfMax);
-		}
-
-        private void OnDrawGizmosSelected()
-		{
-			Color transparentGreen = new Color(0.0f, 1.0f, 0.0f, 0.35f);
-			Color transparentRed = new Color(1.0f, 0.0f, 0.0f, 0.35f);
-
-			if (Grounded) Gizmos.color = transparentGreen;
-			else Gizmos.color = transparentRed;
-
-			// when selected, draw a gizmo in the position of, and matching radius of, the grounded collider
-			Gizmos.DrawSphere(new Vector3(transform.position.x, transform.position.y - GroundedOffset, transform.position.z), GroundedRadius);
 		}
     }
 }
